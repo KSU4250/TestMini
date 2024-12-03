@@ -10,6 +10,7 @@ public class PlayerControl : MonoBehaviour
     public float moveSpeed = 3f;
 
 
+    private bool isAttacking = false;
     private Animator anim;
     private CharacterController controller;
     private void Start()
@@ -20,6 +21,37 @@ public class PlayerControl : MonoBehaviour
 
     public void Update()
     {
+        CheckAttack();
+
+        // 키입력 감지
+        float axisH = Input.GetAxis("Horizontal");
+        float axisV = Input.GetAxis("Vertical");
+
+        if (!isAttacking)
+        {
+            PlayerMove(axisV, axisH);
+        }
+
+        // 스페이스바 눌렀을때
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            StartCoroutine(RollAnimCoroutine());
+        }
+
+    }
+
+    private IEnumerator RollAnimCoroutine()
+    {
+        anim.SetBool("IsSpace", true);
+
+        yield return new WaitForSeconds(0.5f);
+
+        anim.SetBool("IsSpace", false);
+    }
+
+    // 플레이어 이동 관련 함수
+    private void PlayerMove(float _axisV, float _axisH)
+    {
         // 중력구현
         Vector3 gravity = new Vector3(0f, -9.81f * Time.deltaTime, 0f);
         controller.Move(gravity);
@@ -28,12 +60,8 @@ public class PlayerControl : MonoBehaviour
         Vector3 viewDir = transform.position - new Vector3(cameraTr.position.x, transform.position.y, cameraTr.position.z);
         orientation.forward = viewDir.normalized;
 
-        // 움직임 감지
-        float axisH = Input.GetAxis("Horizontal");
-        float axisV = Input.GetAxis("Vertical");
-
         // 카메라 방향으로 움직임 감지했을때 값 저장
-        Vector3 inputDir = orientation.forward * axisV + orientation.right * axisH;
+        Vector3 inputDir = orientation.forward * _axisV + orientation.right * _axisH;
 
         // 움직였을때 플레이어 방향 조절
         if (inputDir != Vector3.zero)
@@ -58,12 +86,6 @@ public class PlayerControl : MonoBehaviour
             moveSpeed = 3f;
         }
 
-        // 스페이스바 눌렀을때
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            StartCoroutine(RollAnimCoroutine());
-        }
-
         // 해당 방향으로 이동
         if (controller.isGrounded)
         {
@@ -71,12 +93,20 @@ public class PlayerControl : MonoBehaviour
         }
     }
 
-    private IEnumerator RollAnimCoroutine()
+
+    // 현재 공격중인지 확인하는 함수
+    private void CheckAttack()
     {
-        anim.SetBool("IsSpace", true);
+        AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0);
 
-        yield return new WaitForSeconds(0.5f);
-
-        anim.SetBool("IsSpace", false);
+        // 현재 서브스테이트 내부 상태 확인
+        if (stateInfo.IsName("SwordAttack.combo1") || stateInfo.IsName("SwordAttack.combo2") || stateInfo.IsName("SwordAttack.combo3"))
+        {
+            isAttacking = true;
+        }
+        else
+        {
+            isAttacking = false;
+        }
     }
 }
