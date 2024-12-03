@@ -1,65 +1,82 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerControl : MonoBehaviour
 {
-    private CharacterController controller = null;
+    // 카메라 방향을 나타네는 orientation
+    public Transform orientation;
+    public Transform cameraTr;
+    public float rotSpeed = 7f;
+    public float moveSpeed = 3f;
+
+
     private Animator anim;
-
-    [SerializeField]
-    private float moveSpeed = 1f;
-
-    private void Awake()
+    private CharacterController controller;
+    private void Start()
     {
         controller = GetComponent<CharacterController>();
         anim = GetComponent<Animator>();
     }
 
-    private void Update()
+    public void Update()
     {
-        float axisV = Input.GetAxis("Vertical"); // 앞뒤
-        float axisH = Input.GetAxis("Horizontal"); // 좌우
+        // 중력구현
+        Vector3 gravity = new Vector3(0f, -9.81f * Time.deltaTime, 0f);
+        controller.Move(gravity);
 
-        SetAnim(axisV, axisH);
+        // 카메라 바라보는 방향으로 방향설정
+        Vector3 viewDir = transform.position - new Vector3(cameraTr.position.x, transform.position.y, cameraTr.position.z);
+        orientation.forward = viewDir.normalized;
 
-        controller.SimpleMove(new Vector3(axisH, 0f, axisV) * moveSpeed);
+        // 움직임 감지
+        float axisH = Input.GetAxis("Horizontal");
+        float axisV = Input.GetAxis("Vertical");
+
+        // 카메라 방향으로 움직임 감지했을때 값 저장
+        Vector3 inputDir = orientation.forward * axisV + orientation.right * axisH;
+
+        // 움직였을때 플레이어 방향 조절
+        if (inputDir != Vector3.zero)
+        {
+            transform.forward = Vector3.Slerp(transform.forward, inputDir.normalized, Time.deltaTime * rotSpeed);
+            anim.SetBool("IsMoving", true);
+        }
+        else
+        {
+            anim.SetBool("IsMoving", false);
+        }
+
+        // 왼쪽 씨프트 눌렀을때
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            anim.SetBool("IsFast", true);
+            moveSpeed = 6f;
+        }
+        else
+        {
+            anim.SetBool("IsFast", false);
+            moveSpeed = 3f;
+        }
+
+        // 스페이스바 눌렀을때
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            StartCoroutine(RollAnimCoroutine());
+        }
+
+        // 해당 방향으로 이동
+        if (controller.isGrounded)
+        {
+            controller.SimpleMove(inputDir * moveSpeed);
+        }
     }
 
-    private void SetAnim(float _axisV, float _axisH)
+    private IEnumerator RollAnimCoroutine()
     {
-        if (_axisV > 0)
-        {
-            anim.SetBool("IsFront", true);
-        }
-        else
-        {
-            anim.SetBool("IsFront", false);
-        }
+        anim.SetBool("IsSpace", true);
 
-        if (_axisV < 0)
-        {
-            anim.SetBool("IsBack", true);
-        }
-        else
-        {
-            anim.SetBool("IsBack", false);
-        }
+        yield return new WaitForSeconds(0.5f);
 
-        if (_axisH > 0)
-        {
-            anim.SetBool("IsRight", true);
-        }
-        else
-        {
-            anim.SetBool("IsRight", false);
-        }
-
-        if (_axisH < 0)
-        {
-            anim.SetBool("IsLeft", true);
-        }
-        else
-        {
-            anim.SetBool("IsLeft", false);
-        }
+        anim.SetBool("IsSpace", false);
     }
 }
