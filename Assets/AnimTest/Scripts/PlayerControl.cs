@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class PlayerControl : MonoBehaviour
@@ -8,15 +9,21 @@ public class PlayerControl : MonoBehaviour
     public Transform cameraTr;
     public float rotSpeed = 7f;
     public float moveSpeed = 3f;
+    public float FastSpeed = 5f;
+    public float jumpSpeed = 3f;
 
 
     private bool isAttacking = false;
     private Animator anim;
     private CharacterController controller;
+    private float startSpeed;
+    private bool CanSpace;
     private void Start()
     {
         controller = GetComponent<CharacterController>();
         anim = GetComponent<Animator>();
+        startSpeed = moveSpeed;
+        CanSpace = true;
     }
 
     public void Update()
@@ -32,19 +39,28 @@ public class PlayerControl : MonoBehaviour
             PlayerMove(axisV, axisH);
         }
 
-        // 스페이스바 눌렀을때
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            StartCoroutine(RollAnimCoroutine());
-        }
-
     }
 
+    // 구르기시 실행되는 코루틴
     private IEnumerator RollAnimCoroutine()
     {
         anim.SetBool("IsSpace", true);
 
-        yield return new WaitForSeconds(0.5f);
+
+        Vector3 JumpDir = transform.forward;
+        float duration = 1.1f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            controller.SimpleMove(JumpDir * jumpSpeed);
+
+            yield return null;
+        }
+        yield return new WaitForSeconds(0.1f);
 
         anim.SetBool("IsSpace", false);
     }
@@ -78,12 +94,21 @@ public class PlayerControl : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftShift))
         {
             anim.SetBool("IsFast", true);
-            moveSpeed = 6f;
+            moveSpeed = FastSpeed;
         }
         else
         {
             anim.SetBool("IsFast", false);
-            moveSpeed = 3f;
+            moveSpeed = startSpeed;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && CanSpace)
+        {
+            Debug.Log(CanSpace);
+            CanSpace = false;
+            StartCoroutine(SpaceCoolDown());
+            StartCoroutine(RollAnimCoroutine());
+
         }
 
         // 해당 방향으로 이동
@@ -100,7 +125,7 @@ public class PlayerControl : MonoBehaviour
         AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0);
 
         // 현재 서브스테이트 내부 상태 확인
-        if (stateInfo.IsName("SwordAttack.combo1") || stateInfo.IsName("SwordAttack.combo2") || stateInfo.IsName("SwordAttack.combo3"))
+        if (stateInfo.IsName("SwordAttack.combo1") || stateInfo.IsName("SwordAttack.combo2") || stateInfo.IsName("SwordAttack.combo3") || stateInfo.IsName("Roll"))
         {
             isAttacking = true;
         }
@@ -108,5 +133,11 @@ public class PlayerControl : MonoBehaviour
         {
             isAttacking = false;
         }
+    }
+
+    private IEnumerator SpaceCoolDown()
+    {
+        yield return new WaitForSeconds(5f);
+        CanSpace = true;
     }
 }

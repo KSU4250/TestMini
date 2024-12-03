@@ -1082,7 +1082,9 @@ MonoBehaviour:
   orientation: {fileID: 751444255}
   cameraTr: {fileID: 891661985}
   rotSpeed: 7
-  moveSpeed: 2
+  moveSpeed: 3
+  FastSpeed: 5
+  jumpSpeed: 2.5
 --- !u!114 &2043354486
 MonoBehaviour:
   m_ObjectHideFlags: 0
