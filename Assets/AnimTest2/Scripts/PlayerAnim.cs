@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class PlayerAnim : MonoBehaviour
@@ -7,14 +6,51 @@ public class PlayerAnim : MonoBehaviour
     public enum EAnim
     {
         Nothing = 0,
-        Roll = 1
+        Roll = 1,
+        Attack = 2,
+        LeftEvasion = 3,
+        RightEvasion = 4,
+        FrontEvasion = 5,
+        BackEvasion = 6
     };
 
+    [SerializeField] private float battleModeShiftSpeed = 1.5f;
+
     private Animator anim;
+    public bool comboOn;
 
     private void Start()
     {
         anim = GetComponent<Animator>();
+    }
+
+    // 공격과 콤보어택
+    public void Attack()
+    {
+        // 때리면 attackTrigger 활성화 (이미 공격중이라면 트리거 발생X)
+        if (!(CheckAnim() == EAnim.Attack))
+        {
+            anim.SetTrigger("AttackTrigger");
+        }
+
+        // 콤보때 때리면 comboTrigger 활성화, combo 비활성화 상태로 바꿈.
+        if (comboOn)
+        {
+            anim.SetTrigger("ComboTrigger");
+            comboOn = false;
+        }
+    }
+
+    // 콤보 활성화가 되면 애니메이션에서 해당함수 호출
+    private void ComboOn()
+    {
+        comboOn = true;
+    }
+
+    // 콤보 비활성화가 되면 애니메이션에서 해당함수 호출
+    private void ComboOff()
+    {
+        comboOn = false;
     }
 
     // 움직임 여부에 따른 move 애니메이션
@@ -29,10 +65,49 @@ public class PlayerAnim : MonoBehaviour
         anim.SetBool("IsShift", _isShift);
     }
 
+    // 배틀모드일때 Shift 누르면 애니메이션 속도를 바꿔서 빠르게 이동
+    public void BattleModeShift(bool _isShift)
+    {
+        anim.SetBool("IsShift", _isShift);
+
+        // 배틀모드에서는 따로 걷는 속도를 증가
+        if (_isShift)
+        {
+            anim.SetFloat("WalkSpeed", battleModeShiftSpeed);
+        }
+        else
+        {
+            anim.SetFloat("WalkSpeed", 1f);
+        }
+    }
+
     // Space 입력시 실행되는 트리거
     public void Space()
     {
         anim.SetTrigger("SpaceTrigger");
+    }
+
+    // BattleMode에서 Combo중일때 Space하면 실행되는 함수 (캐릭터 기준으로 점프)
+    public void BattleModeAttackSpace(Vector3 _originInput)
+    {
+        if (comboOn)
+        {
+            anim.SetTrigger("ComboEvasionTrigger");
+            // 왼쪽 회피
+            if (_originInput.x < -0.5f) anim.SetInteger("EvasionNum", (int)EAnim.LeftEvasion);
+            // 오른쪽 회피
+            if (_originInput.x > 0.5f) anim.SetInteger("EvasionNum", (int)EAnim.RightEvasion);
+            // 앞 회피
+            if (_originInput.z > 0.5f) anim.SetInteger("EvasionNum", (int)EAnim.FrontEvasion);
+            // 뒤 회피
+            if (_originInput.z < -0.5f) anim.SetInteger("EvasionNum", (int)EAnim.BackEvasion);
+        }
+    }
+
+    // 회피후 회피 num값 초기화
+    public void ResetEvasionNum()
+    {
+        anim.SetInteger("EvasionNum", 0);
     }
 
     // 배틀모드로 전환되는 애니메이션
@@ -49,6 +124,11 @@ public class PlayerAnim : MonoBehaviour
         if (stateInfo.IsName("Roll"))
         {
             return EAnim.Roll;
+        }
+
+        if (stateInfo.IsName("ComboAttack.Combo1") || stateInfo.IsName("ComboAttack.Combo2") || stateInfo.IsName("ComboAttack.Combo3"))
+        {
+            return EAnim.Attack;
         }
 
         return EAnim.Nothing;

@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: 11c317ca660f7a740b666b9a9e0835e4
+guid: b8075c9babebc1a4a877c916f1b2fb05
 AssetOrigin:
   serializedVersion: 1
   productId: 288783
   packageName: RPG_Animations_Pack_FREE
   packageVersion: 1.1
-  assetPath: Assets/DoubleL/One Hand Up/Attack_A/OneHand_Up_Attack_3.fbx
+  assetPath: Assets/DoubleL/One Hand Up/Attack_A/OneHand_Up_Attack_2.fbx
   uploadId: 704351
 ModelImporter:
   serializedVersion: 22200
@@ -38,11 +38,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: OneHand_Up_Attack_3
-      takeName: OneHand_Up_Attack_3
-      internalID: -3891449819406770849
+      name: Combo2
+      takeName: OneHand_Up_Attack_2
+      internalID: 6799651534840860903
       firstFrame: 0
-      lastFrame: 60
+      lastFrame: 80
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -61,7 +61,21 @@ ModelImporter:
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
-      events: []
+      events:
+      - time: 0.4092536
+        functionName: ComboOn
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: da5000581862c7549bc64049df2c9d41, type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.9988829
+        functionName: ComboOff
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: da5000581862c7549bc64049df2c9d41, type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}

@@ -38,7 +38,7 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: OneHand_Up_Attack_1
+      name: Combo1
       takeName: OneHand_Up_Attack_1
       internalID: -1115183702260151492
       firstFrame: 0
@@ -62,17 +62,17 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.5018479
+      - time: 0.4388558
         functionName: ComboOn
         data: 
-        objectReferenceParameter: {fileID: 11500000, guid: 3febf596670eb70488c76ce79b760b81, type: 3}
+        objectReferenceParameter: {fileID: 11500000, guid: da5000581862c7549bc64049df2c9d41, type: 3}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
-      - time: 0.8269168
+      - time: 1
         functionName: ComboOff
         data: 
-        objectReferenceParameter: {fileID: 11500000, guid: 3febf596670eb70488c76ce79b760b81, type: 3}
+        objectReferenceParameter: {fileID: 11500000, guid: da5000581862c7549bc64049df2c9d41, type: 3}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
@@ -569,7 +569,7 @@ ModelImporter:
       scale: {x: 1, y: 1, z: 1}
     - name: Chest
       parentName: Spine
-      position: {x: -0, y: 0.1034043, z: 0}
+      position: {x: -0, y: 0.1034043, z: 0.001222906}
       rotation: {x: 3.8774097e-26, y: -4.263257e-14, z: 6.82121e-13, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: UpperChest
