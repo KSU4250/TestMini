@@ -8,12 +8,15 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private float rotSpeed = 7f; // 플레이어 몸을 카메라 보는 방향으로 회전하는 속도
     [SerializeField] private float rollCooldown = 5f; // 구르기 쿨타임
     [SerializeField] private PlayerAnim pAnim; // animation 관리하는 PlayerAnim 스크립트
+    [SerializeField] private float evasionTime = 1f;
 
 
     private CharacterController controller;
     private float startSpeed; // 처음 시작속도(걷는 속도) - 달리다가 돌아올때 필요
     private bool canRoll; // 구를수 있는 상태인지 나타냄.
     private bool IsBattleMode; // 싸움모드인지 아닌지 나타냄.
+    private float axisH;
+    private float axisV;
 
     private void Start()
     {
@@ -25,25 +28,47 @@ public class PlayerMove : MonoBehaviour
 
     private void Update()
     {
-        // 중력 적용
-        Gravity();
-
-        // 구르기 애니메이션 진행중이라면 키입력 안받음.
-        if (pAnim.CheckAnim() == PlayerAnim.EAnim.Roll) return;
+        // 컨트롤러가 비활성화 상태일때 return
+        if (controller == null) return;
 
         // 키입력 감지
-        float axisH = Input.GetAxis("Horizontal");
-        float axisV = Input.GetAxis("Vertical");
+        axisH = Input.GetAxis("Horizontal");
+        axisV = Input.GetAxis("Vertical");
+
+        // 입력받은 값
+        Vector3 originInput = new Vector3(axisH, 0f, axisV);
+
+        // 중력 적용
+        //Gravity();
+
+        // 구르기 애니메이션 or 회피 진행중이라면 키입력 안받음.
+        if (pAnim.CheckAnim() == PlayerAnim.EAnim.Roll || pAnim.CheckAnim() == PlayerAnim.EAnim.LeftEvasion) return;
+
+        // 공격 애니메이션 중에는 마우스 입력과, space바만 가능
+        if (pAnim.CheckAnim() == PlayerAnim.EAnim.Attack && IsBattleMode)
+        {
+            // Space 눌렀을때
+            InputSpace(originInput);
+
+            // 마우스 좌클릭
+            InputAttack();
+            return;
+        }
 
         // 키 입력대로 3인칭 움직임
         ThirdPersonMove(axisV, axisH);
 
-        // 배틀모드일때 마우스 좌클릭시
-        if (Input.GetMouseButtonDown(0) && IsBattleMode)
-        {
-            // 공격 애니메이션 실행
-            pAnim.Attack();
-        }
+        // 공격입력
+        InputAttack();
+
+        // Shift 눌렀을때
+        InputShift();
+
+        // Space 눌렀을때
+        InputSpace(originInput);
+
+        // E(배틀모드키) 눌렀을때
+        InputKeyE();
     }
 
     // 중력을 적용하는 함수
@@ -59,9 +84,6 @@ public class PlayerMove : MonoBehaviour
         // 카메라 바라보는 방향으로 방향설정
         Vector3 viewDir = transform.position - new Vector3(followCameraTr.position.x, transform.position.y, followCameraTr.position.z);
         orientation.forward = viewDir.normalized;
-
-        // 그냥 입력받은값
-        Vector3 originInput = new Vector3(_axisH, 0f, _axisV);
 
         // orientation 기준으로(카메라 바라보는 방향) 키입력 감지함.
         Vector3 camInput = orientation.forward * _axisV + orientation.right * _axisH;
@@ -79,16 +101,17 @@ public class PlayerMove : MonoBehaviour
             // move 애니메이션 실행안함.
             pAnim.Move(false);
         }
+    }
 
-        // Shift 눌렀을때
-        InputShift();
-
-        // Space 눌렀을때
-        InputSpace(originInput);
-
-        // E(배틀모드키) 눌렀을때
-        InputKeyE();
-
+    // 공격 입력시(마우스 좌클릭)
+    private void InputAttack()
+    {
+        // 배틀모드일때 마우스 좌클릭시
+        if (Input.GetMouseButtonDown(0) && IsBattleMode)
+        {
+            // 공격 애니메이션 실행
+            pAnim.Attack();
+        }
     }
 
     // Shift -> 속도 변경 및 달리는 애니메이션
@@ -122,11 +145,12 @@ public class PlayerMove : MonoBehaviour
     }
 
     // Space -> 구르는 애니메이션 실행, 쿨타임 설정
-    // 배틀상태에서의 구르기를 위해 카메라가 바라보는 방향의 입력을 받아옴.
     private void InputSpace(Vector3 _originInput)
     {
         if (Input.GetKeyDown(KeyCode.Space) && canRoll)
         {
+            // roll 할때 -> 공격 안받는 layer를 따로 설정 => 몬스터 공격에 안걸리는 layer
+
             // roll 쿨타임 on
             // canRoll = false;
             // Invoke("CanRoll", rollCooldown);
@@ -136,7 +160,7 @@ public class PlayerMove : MonoBehaviour
 
             if (IsBattleMode)
             {
-                // battleMode일때 attack도중에 space시 anim에 필요한 정보(카메라가 바라보는 방향 -> 그 방향으로 구를거라)를 넘김
+                // battleMode일때 attack도중에 space시 anim에 필요한 정보(구르기 할 방향을 입력)를 넘김
                 pAnim.BattleModeAttackSpace(_originInput);
             }
         }
@@ -146,6 +170,12 @@ public class PlayerMove : MonoBehaviour
     private void CanRoll()
     {
         canRoll = true;
+    }
+
+    // 무적시간 지난뒤 controller 활성화
+    private void OnCollider()
+    {
+        controller.enabled = true;
     }
 
     // 전투모드 On/Off

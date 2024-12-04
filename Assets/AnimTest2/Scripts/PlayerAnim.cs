@@ -17,7 +17,15 @@ public class PlayerAnim : MonoBehaviour
     [SerializeField] private float battleModeShiftSpeed = 1.5f;
 
     private Animator anim;
-    public bool comboOn;
+    public bool[] comboOn;
+    public int comboCnt;
+
+    private void Awake()
+    {
+        comboOn = new bool[4];
+        comboOn[0] = false;
+        comboCnt = 0;
+    }
 
     private void Start()
     {
@@ -34,23 +42,24 @@ public class PlayerAnim : MonoBehaviour
         }
 
         // 콤보때 때리면 comboTrigger 활성화, combo 비활성화 상태로 바꿈.
-        if (comboOn)
+        if (comboOn[comboCnt])
         {
             anim.SetTrigger("ComboTrigger");
-            comboOn = false;
+            comboOn[comboCnt] = false;
         }
     }
 
     // 콤보 활성화가 되면 애니메이션에서 해당함수 호출
-    private void ComboOn()
+    private void ComboOn(int _comboNum)
     {
-        comboOn = true;
+        comboOn[_comboNum] = true;
+        comboCnt = _comboNum;
     }
 
     // 콤보 비활성화가 되면 애니메이션에서 해당함수 호출
-    private void ComboOff()
+    private void ComboOff(int _comboNum)
     {
-        comboOn = false;
+        comboOn[_comboNum] = false;
     }
 
     // 움직임 여부에 따른 move 애니메이션
@@ -90,17 +99,20 @@ public class PlayerAnim : MonoBehaviour
     // BattleMode에서 Combo중일때 Space하면 실행되는 함수 (캐릭터 기준으로 점프)
     public void BattleModeAttackSpace(Vector3 _originInput)
     {
-        if (comboOn)
+        if (comboOn[comboCnt])
         {
-            anim.SetTrigger("ComboEvasionTrigger");
+            Debug.Log(_originInput);
             // 왼쪽 회피
-            if (_originInput.x < -0.5f) anim.SetInteger("EvasionNum", (int)EAnim.LeftEvasion);
+            if (_originInput.x < -0.01f) anim.SetInteger("EvasionNum", (int)EAnim.LeftEvasion);
             // 오른쪽 회피
-            if (_originInput.x > 0.5f) anim.SetInteger("EvasionNum", (int)EAnim.RightEvasion);
+            if (_originInput.x > 0.01f) anim.SetInteger("EvasionNum", (int)EAnim.RightEvasion);
             // 앞 회피
-            if (_originInput.z > 0.5f) anim.SetInteger("EvasionNum", (int)EAnim.FrontEvasion);
+            if (_originInput.z > 0.01f) anim.SetInteger("EvasionNum", (int)EAnim.FrontEvasion);
             // 뒤 회피
-            if (_originInput.z < -0.5f) anim.SetInteger("EvasionNum", (int)EAnim.BackEvasion);
+            if (_originInput.z < -0.01f) anim.SetInteger("EvasionNum", (int)EAnim.BackEvasion);
+
+            // 콤보 
+            comboOn[comboCnt] = false;
         }
     }
 
@@ -129,6 +141,11 @@ public class PlayerAnim : MonoBehaviour
         if (stateInfo.IsName("ComboAttack.Combo1") || stateInfo.IsName("ComboAttack.Combo2") || stateInfo.IsName("ComboAttack.Combo3"))
         {
             return EAnim.Attack;
+        }
+
+        if (stateInfo.IsName("EvasionBack") || stateInfo.IsName("EvasionForward") || stateInfo.IsName("EvasionRight") || stateInfo.IsName("EvasionLeft"))
+        {
+            return EAnim.LeftEvasion;
         }
 
         return EAnim.Nothing;
